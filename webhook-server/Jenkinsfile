@@ -3,6 +3,9 @@ pipeline {
     
     environment {
         SONAR_HOST_URL = 'http://localhost:9000'
+        DOCKER_REGISTRY = 'asaikale'
+        DOCKER_IMAGE = 'webhook-server'
+        DOCKER_TAG = 'latest'
     }
     
     stages {
@@ -23,7 +26,6 @@ pipeline {
                 '''
             }
         }
-        
         
         stage('Build') {
             steps {
