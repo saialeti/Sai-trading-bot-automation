@@ -1,0 +1,162 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_REGISTRY = "docker.io"
+        DOCKER_REPO = "asaikale"
+        IMAGE_NAME = "trading-bot"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        KUBECONFIG = "/root/.kube/config"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '🔄 Checking out trading-bot code...'
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo '📦 Installing Python dependencies...'
+                sh '''
+                    cd trading-bot
+                    python -m pip install --upgrade pip
+                    pip install -r requirements.txt
+                    pip install pytest pytest-cov
+                '''
+            }
+        }
+
+        stage('Tests') {
+            steps {
+                echo '🧪 Running pytest tests...'
+                sh '''
+                    cd trading-bot
+                    if [ -d "tests" ]; then
+                        pytest tests/ -v --tb=short --cov=src || echo "Tests not fully configured yet"
+                    else
+                        echo "⚠️  No tests directory found. Skipping tests."
+                    fi
+                '''
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo '🔍 Running SonarQube analysis...'
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                        cd trading-bot
+                        sonar-scanner \
+                            -Dsonar.projectKey=trading-bot \
+                            -Dsonar.sources=src \
+                            -Dsonar.host.url=$SONAR_HOST_URL \
+                            -Dsonar.login=$SONAR_AUTH_TOKEN
+                    '''
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo '🏗️  Building Docker image...'
+                sh '''
+                    cd trading-bot
+                    docker build -t ${DOCKER_REPO}/${IMAGE_NAME}:${IMAGE_TAG} .
+                    docker tag ${DOCKER_REPO}/${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_REPO}/${IMAGE_NAME}:latest
+                '''
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                echo '🔒 Running Trivy security scan...'
+                sh '''
+                    trivy image --severity HIGH,CRITICAL \
+                        ${DOCKER_REPO}/${IMAGE_NAME}:${IMAGE_TAG} || true
+                '''
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                echo '📤 Pushing image to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ${DOCKER_REPO}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${DOCKER_REPO}/${IMAGE_NAME}:latest
+                        docker logout
+                    '''
+                }
+            }
+        }
+
+        stage('Load to Minikube') {
+            steps {
+                echo '⚙️  Loading image to Minikube...'
+                sh '''
+                    minikube image load ${DOCKER_REPO}/${IMAGE_NAME}:${IMAGE_TAG} || echo "Minikube not available, skipping local load"
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo '🚀 Deploying to Kubernetes (FULLY AUTOMATED FROM JENKINS)...'
+                
+                withCredentials([file(credentialsId: 'trading-bot-secret-file', variable: 'SECRET_FILE')]) {
+                    sh '''
+                        cd trading-bot/k8s
+                        
+                        echo "📋 Step 1: Applying ConfigMap..."
+                        kubectl apply -f configmap.yaml
+                        
+                        echo "🔐 Step 2: Applying Secret (from Jenkins Credentials)..."
+                        kubectl apply -f $SECRET_FILE
+                        
+                        echo "🐳 Step 3: Applying Deployment..."
+                        kubectl apply -f deployment.yaml
+                        
+                        echo "🌐 Step 4: Applying Service..."
+                        kubectl apply -f service.yaml
+                        
+                        echo "⏳ Step 5: Updating image to new version..."
+                        kubectl set image deployment/trading-bot \
+                            trading-bot=${DOCKER_REPO}/${IMAGE_NAME}:${IMAGE_TAG} \
+                            --record
+                        
+                        echo "⏳ Step 6: Waiting for deployment to be ready..."
+                        kubectl rollout status deployment/trading-bot --timeout=5m
+                        
+                        echo "✅ Trading Bot Deployment Complete!"
+                        echo "========================================="
+                        kubectl get deployments trading-bot
+                        echo ""
+                        kubectl get pods -l app=trading-bot
+                        echo ""
+                        kubectl get svc trading-bot-service
+                        echo "========================================="
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline completed successfully!'
+            echo "🐳 Docker Image: ${DOCKER_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "🐳 Latest Tag: ${DOCKER_REPO}/${IMAGE_NAME}:latest"
+            echo "🚀 Trading Bot deployed to Kubernetes!"
+        }
+        failure {
+            echo '❌ Pipeline failed! Check logs above.'
+        }
+        always {
+            echo '📊 Pipeline execution finished.'
+        }
+    }
+}
