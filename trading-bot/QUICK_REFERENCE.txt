@@ -1,0 +1,96 @@
+╔════════════════════════════════════════════════════════════════════╗
+║             TRADING BOT - QUICK REFERENCE                         ║
+╚════════════════════════════════════════════════════════════════════╝
+
+LOCATION: ~/Sai-trading-bot-automation/trading-bot/
+
+═══════════════════════════════════════════════════════════════════
+
+LOCAL DEVELOPMENT:
+
+pip install -r requirements.txt         Install packages
+python src/server.py                    Start server
+curl http://localhost:3000              Test server
+
+═══════════════════════════════════════════════════════════════════
+
+DOCKER:
+
+docker build -t asaikale/trading-bot:latest .     Build
+docker run -p 3000:3000 \
+  -e ACCOUNTS_JSON='[...]' \
+  asaikale/trading-bot:latest                     Run
+docker logs -f trading-bot                        View logs
+docker stop trading-bot                           Stop
+docker push asaikale/trading-bot:latest           Push to Hub
+
+═══════════════════════════════════════════════════════════════════
+
+KUBERNETES:
+
+kubectl apply -f k8s/                       Deploy all
+kubectl get pods -l app=trading-bot         List pods
+kubectl logs -l app=trading-bot             View logs
+kubectl describe pod <pod-name>             Pod details
+kubectl delete -f k8s/                      Delete all
+kubectl port-forward svc/trading-bot 3000:3000
+
+═══════════════════════════════════════════════════════════════════
+
+ENDPOINTS:
+
+GET  /                          Server status
+POST /trade                     Send trade signal
+GET  /trades                    Get all trades
+GET  /trades/<id>              Get specific trade
+GET  /test                      Test connections
+GET  /debug/list               List accounts
+GET  /debug/token/<account>    Show token
+
+═══════════════════════════════════════════════════════════════════
+
+ENVIRONMENT VARIABLES:
+
+ACCOUNTS_JSON=                 Account credentials (JSON)
+PORT=3000                      Server port
+DB_FILE=trades.db              Database file
+LOG_LEVEL=INFO                 Logging level
+
+═══════════════════════════════════════════════════════════════════
+
+TESTING:
+
+# Entry signal
+curl -X POST http://localhost:3000/trade \
+  -H "Content-Type: application/json" \
+  -d '{"embeds":[{"title":"EURUSD",...}]}'
+
+# Get all trades
+curl http://localhost:3000/trades
+
+# Test connections
+curl http://localhost:3000/test
+
+═══════════════════════════════════════════════════════════════════
+
+FILES:
+
+src/server.py                 Flask trading bot
+requirements.txt              Python dependencies
+Dockerfile                    Docker config
+k8s/                         Kubernetes manifests
+  configmap.yaml             Configuration
+  secret.yaml                Credentials
+  deployment.yaml            Pod deployment
+  service.yaml               Network service
+
+═══════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+
+Module not found:             pip install -r requirements.txt
+Connection refused:           python src/server.py
+Pod not starting:             kubectl logs <pod-name>
+Token expired:                Bot auto-refreshes
+
+═══════════════════════════════════════════════════════════════════

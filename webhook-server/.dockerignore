@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (will be installed fresh)
+node_modules
+npm-debug.log
+package-lock.json
+
+# Documentation
+README.md
+QUICKSTART.md
+SETUP_GUIDE.md
+README.md
+FILES_SUMMARY.txt
+QUICK_REFERENCE.txt
+00_START_HERE.md
+
+# Kubernetes
+k8s/
+*.yaml
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Logs
+logs/
+*.log

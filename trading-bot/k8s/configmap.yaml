@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trading-bot-config
+  namespace: default
+data:
+  # Flask Application Configuration
+  PORT: "3000"
+  ENVIRONMENT: "https://demo.tradelocker.com"
+  SERVER: "HEROFX"
+  
+  # Database Configuration
+  DB_FILE: "trades.db"
+  
+  # Logging Configuration
+  LOG_LEVEL: "INFO"
+  LOG_FILE: "trading_bot.log"
+  
+  # Rate Limiting Configuration
+  MIN_GAP_SEC: "0.40"
+  MAX_RETRY_ATTEMPTS: "4"
+  
+  # Flask Configuration
+  FLASK_ENV: "production"
+  FLASK_DEBUG: "False"

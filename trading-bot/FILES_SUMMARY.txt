@@ -1,0 +1,312 @@
+╔════════════════════════════════════════════════════════════════════╗
+║              TRADING BOT - FILES SUMMARY                          ║
+╚════════════════════════════════════════════════════════════════════╝
+
+SOURCE CODE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📄 src/server.py
+   Flask trading bot with:
+   - Multi-account support (11 accounts)
+   - Trade signal processing (entry & exit)
+   - SQLite database logging
+   - Health check endpoints
+   - Token management (auto-refresh)
+   - Order placement & cancellation
+
+📄 requirements.txt
+   Python dependencies:
+   - Flask==2.3.3 (web framework)
+   - Flask-CORS==4.0.0 (cross-origin)
+   - requests==2.31.0 (HTTP)
+   - pandas==2.0.3 (data processing)
+   - tradelocker (API client)
+   - Werkzeug==2.3.7 (WSGI)
+
+
+DOCKER:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📄 Dockerfile
+   Docker build configuration:
+   - Base: python:3.11-alpine (50MB)
+   - Non-root user: python (UID 1001)
+   - Health check every 30 seconds
+   - Exposes port 3000
+   - Optimized for production
+
+
+KUBERNETES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 k8s/ folder contains:
+
+  📄 configmap.yaml
+     Non-sensitive configuration:
+     - PORT: 3000
+     - DB_FILE: trades.db
+     - LOG_LEVEL: INFO
+     - FLASK_ENV: production
+
+  📄 secret.yaml
+     Sensitive data (ENCRYPTED in etcd):
+     - ACCOUNTS_JSON: All 11 account credentials
+     ⚠️ UPDATE BEFORE DEPLOYING!
+     ⚠️ Never commit to git!
+
+  📄 deployment.yaml
+     Kubernetes deployment:
+     - Replicas: 1 (stateful trading logic)
+     - Strategy: RollingUpdate
+     - Memory: 128Mi request / 512Mi limit
+     - CPU: 200m request / 1000m limit
+     - Liveness probe: every 10 seconds
+     - Readiness probe: every 5 seconds
+     - Loads config from ConfigMap
+     - Loads secrets from Secret
+
+  📄 service.yaml
+     Kubernetes service:
+     - Type: LoadBalancer
+     - External port: 3000
+     - Internal port: 3000
+     - Selector: app=trading-bot
+
+
+CONFIGURATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📄 .dockerignore
+   Docker build exclusions:
+   - __pycache__/
+   - *.py[cod]
+   - venv/
+   - .env files
+   - k8s/ (not needed in image)
+   - *.log
+
+📄 .gitignore
+   Git version control exclusions:
+   - __pycache__/
+   - *.py[cod]
+   - venv/
+   - .env files
+   - k8s/secret.yaml (sensitive!)
+   - *.log
+   - *.db
+
+
+DOCUMENTATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 00_START_HERE.md
+   Entry point for new users
+   - Quick overview
+   - 3-step local start
+   - Docker quick run
+   - K8s deployment
+
+📖 QUICKSTART.md
+   3-step deployment guides
+   - Local development (5 min)
+   - Docker setup (10 min)
+   - Kubernetes setup (15 min)
+   - Testing endpoints
+
+📖 README.md
+   Complete documentation
+   - Features overview
+   - Installation methods
+   - Environment variables
+   - API endpoints
+   - Trade signal format
+   - Database schema
+   - Architecture diagram
+   - Troubleshooting
+
+📖 SETUP_GUIDE.md
+   Detailed step-by-step setup
+   - Prerequisites
+   - Local setup (installation + run)
+   - Docker setup (build + push)
+   - Kubernetes setup (deploy + verify)
+   - Testing procedures
+   - Monitoring commands
+   - Troubleshooting guide
+   - Cleanup instructions
+
+📖 QUICK_REFERENCE.txt
+   One-page command reference
+   - All commands at a glance
+   - Endpoints summary
+   - Environment variables
+   - Quick testing examples
+   - Troubleshooting tips
+
+📖 FILES_SUMMARY.txt
+   This file! File descriptions
+
+
+DEPLOYMENT SCRIPTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📄 deploy.sh
+   Automated deployment script (executable)
+   Commands available:
+   - help              Show help
+   - check             Check prerequisites
+   - build             Build Docker image
+   - push              Push to Docker Hub
+   - start-minikube    Start minikube
+   - load-image        Load image to minikube
+   - deploy            Deploy to Kubernetes
+   - status            Check deployment status
+   - logs              View logs
+   - forward           Port forward
+   - test              Test connections
+   - cleanup           Delete all resources
+   - full-setup        Complete setup (build→push→deploy)
+
+
+DIRECTORY STRUCTURE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+trading-bot/
+├── src/
+│   └── server.py               (1 file - Python app)
+├── k8s/
+│   ├── configmap.yaml          (4 files - K8s manifests)
+│   ├── secret.yaml
+│   ├── deployment.yaml
+│   └── service.yaml
+├── Dockerfile                  (Docker build)
+├── requirements.txt            (Python dependencies)
+├── .dockerignore               (Docker exclusions)
+├── .gitignore                  (Git exclusions)
+├── 00_START_HERE.md            (6 docs files)
+├── QUICKSTART.md
+├── README.md
+├── SETUP_GUIDE.md
+├── QUICK_REFERENCE.txt
+├── FILES_SUMMARY.txt
+└── deploy.sh                   (Automation script)
+
+
+QUICK FACTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Total Files:        17 files
+Total Folders:      2 folders (src/, k8s/)
+Language:           Python 3.11
+Framework:          Flask
+Port:              3000
+Database:          SQLite (trades.db)
+Replicas (K8s):    1
+User (Docker):     python (non-root)
+Health Checks:     Yes (liveness & readiness)
+Accounts:          11 (multi-account)
+
+CORE FEATURES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Multi-account trading (11 accounts)
+✅ Entry signals (BUY/SELL) → Place LIMIT orders
+✅ Exit signals (CLOSE) → Cancel orders or close positions
+✅ SQLite database for trade history
+✅ Trade tracking (ID, symbol, side, lot, price, PnL)
+✅ Health check endpoints
+✅ Auto token refresh (JWT management)
+✅ Docker containerized
+✅ Kubernetes ready (deployment + service)
+✅ Non-root user (security)
+✅ Rate limiting (429 backoff)
+✅ Error handling & logging
+
+API ENDPOINTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Health Endpoints:
+  GET  /                      Server status & stats
+  GET  /test                  Test account connections
+
+Trade Management:
+  POST /trade                 Receive trade signals (entry & exit)
+  GET  /trades                Get all trades from database
+  GET  /trades/<trade_id>     Get specific trade
+
+Debug/Monitoring:
+  GET  /debug/list            List active accounts
+  GET  /debug/token/<account> Show token & expiry
+  POST /debug/reauth/<account> Force token refresh
+  POST /debug/invalidate/<account> Invalidate tokens
+
+DATABASE SCHEMA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+trades table contains:
+  - id (Primary Key)
+  - trade_id (Signal ID from Pine Script)
+  - account_name (Account name)
+  - symbol (e.g., EURUSD)
+  - side (buy/sell)
+  - lot_size (Volume)
+  - entry_price (Entry level)
+  - sl_price (Stop loss)
+  - order_id (TradeLocker order ID)
+  - position_id (TradeLocker position ID)
+  - status (PENDING, FILLED, CLOSED)
+  - close_timestamp (When closed)
+  - realized_pnl (Profit/Loss)
+  - close_method (ORDER_CANCELLED or POSITION_CLOSED)
+
+COMPARISON: Webhook-Server vs Trading-Bot
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Feature               Webhook-Server      Trading-Bot
+Language              Node.js             Python
+Framework             Express.js          Flask
+Port                  3001                3000
+Replicas              2 (stateless)       1 (stateful)
+Database              SQLite (trades)     SQLite (trades)
+Accounts              All accounts        11 accounts
+Role                  Signal receiver     Order executor
+Scaling               Horizontal (2 pods) Vertical (1 pod)
+
+ENVIRONMENT SETUP:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ConfigMap provides:
+  PORT                 Server port
+  DB_FILE             Database file name
+  LOG_LEVEL           Logging level
+  FLASK_ENV           Flask environment
+
+Secret provides:
+  ACCOUNTS_JSON       All account credentials (JSON array)
+
+Manual env vars:
+  ACCOUNTS_JSON       Can set locally for testing
+  PORT               Override port
+  DB_FILE            Override database file
+
+SECURITY NOTES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Credentials in Kubernetes Secret (encrypted)
+✅ Non-root user (python, UID 1001)
+✅ Read-only filesystem where possible
+✅ No hardcoded credentials in code
+✅ Environment variable injection
+✅ HTTPS support for TradeLocker API
+✅ Auto token refresh (no manual intervention)
+
+DEPLOYMENT WORKFLOW:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Update k8s/secret.yaml with credentials
+2. Build Docker image: docker build ...
+3. Push to Docker Hub: docker push ...
+4. Deploy to K8s: kubectl apply -f k8s/
+5. Verify: kubectl get pods
+6. Test: curl http://localhost:3000
+

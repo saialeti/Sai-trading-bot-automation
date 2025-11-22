@@ -1,0 +1,77 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '🔄 Checking out code from GitHub...'
+                checkout scm
+            }
+        }
+        
+        stage('Tests') {
+            steps {
+                echo '🧪 Running tests...'
+                sh '''
+                    npm install
+                    npm test
+                '''
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            steps {
+                echo '🔍 Running SonarQube analysis...'
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                        sonar-scanner \
+                          -Dsonar.projectKey=webhook-server \
+                          -Dsonar.sources=src \
+                          -Dsonar.host.url=http://localhost:9000
+                    '''
+                }
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo '🐳 Building Docker image...'
+                sh '''
+                    docker build -t asaikale/webhook-server:latest .
+                '''
+            }
+        }
+        
+        stage('Trivy Scan') {
+            steps {
+                echo '🔐 Scanning Docker image with Trivy...'
+                sh '''
+                    trivy image --severity HIGH,CRITICAL asaikale/webhook-server:latest
+                '''
+            }
+        }
+        
+        stage('Push to Docker Hub') {
+            steps {
+                echo '📤 Pushing Docker image to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push asaikale/webhook-server:latest
+                        docker logout
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo '🚀 Deploying to Kubernetes...'
+                sh '''
+                    kubectl set image deployment/webhook-server webhook-server=asaikale/webhook-server:latest --record
+                    kubectl rollout status deployment/webhook-server
+                '''
+            }
+        }
+    }
+}

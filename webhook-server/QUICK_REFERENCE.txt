@@ -1,0 +1,88 @@
+╔════════════════════════════════════════════════════════════════════╗
+║             WEBHOOK SERVER - QUICK REFERENCE                      ║
+╚════════════════════════════════════════════════════════════════════╝
+
+LOCATION: ~/Sai-trading-bot-automation/webhook-server/
+
+═══════════════════════════════════════════════════════════════════
+
+LOCAL DEVELOPMENT:
+
+npm install                    Install dependencies
+npm start                      Start server
+PORT=3002 npm start           Run on different port
+curl http://localhost:3001     Test server
+
+═══════════════════════════════════════════════════════════════════
+
+DOCKER:
+
+docker build -t webhook-server:latest .           Build image
+docker run -p 3001:3001 webhook-server:latest     Run container
+docker logs <container-id>                        View logs
+docker stop <container-id>                        Stop container
+
+═══════════════════════════════════════════════════════════════════
+
+KUBERNETES:
+
+kubectl apply -f k8s/                      Deploy all resources
+kubectl get pods                           List pods
+kubectl logs -l app=webhook-server         View logs
+kubectl describe pod <pod-name>            Pod details
+kubectl delete -f k8s/                     Delete all resources
+kubectl port-forward svc/webhook-server 3001:3001
+
+═══════════════════════════════════════════════════════════════════
+
+ENDPOINTS:
+
+GET /                          Server status
+GET /health/live              Liveness probe
+GET /health/ready             Readiness probe
+POST /webhook                 Forward webhook
+
+═══════════════════════════════════════════════════════════════════
+
+ENVIRONMENT VARIABLES:
+
+PORT=3001
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+TRADING_BOT_URL=http://localhost:3000/trade
+
+═══════════════════════════════════════════════════════════════════
+
+TESTING:
+
+curl http://localhost:3001
+curl http://localhost:3001/health/live
+curl http://localhost:3001/health/ready
+
+curl -X POST http://localhost:3001/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"signal": "BUY", "symbol": "EURUSD"}'
+
+═══════════════════════════════════════════════════════════════════
+
+FILES:
+
+src/server.js                 Express.js webhook server
+package.json                  Dependencies
+Dockerfile                    Docker build config
+k8s/                          Kubernetes manifests
+  deployment.yaml             Pod deployment
+  service.yaml                Network service
+  configmap.yaml              Configuration
+  secret.yaml                 Secrets
+  serviceaccount.yaml         RBAC
+
+═══════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+
+Port in use:                   Change PORT env variable
+Docker error:                  Use sudo or add to docker group
+Pod not starting:              kubectl logs <pod-name>
+Connection refused:            Check if server is running
+
+═══════════════════════════════════════════════════════════════════

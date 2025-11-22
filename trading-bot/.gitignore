@@ -1,0 +1,73 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Kubernetes Secrets (IMPORTANT - NEVER commit credentials!)
+secret.yaml
+k8s/secret.yaml
+
+# Database files
+*.db
+trades.db
+
+# Log files
+*.log
+trading_bot.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Docker
+.dockerignore
+
+# IDE files
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.temp
+*.bak

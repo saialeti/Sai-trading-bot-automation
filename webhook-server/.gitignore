@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Build & Dist
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# K8s & Docker
+k8s/secret.yaml
