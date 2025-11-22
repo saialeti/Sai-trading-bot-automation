@@ -1,5 +1,10 @@
 pipeline {
     agent any
+    
+    environment {
+        SONAR_HOST_URL = 'http://localhost:9000'
+    }
+    
     stages {
         stage('Checkout') {
             steps {
@@ -20,13 +25,16 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo '🔍 Running SonarQube analysis...'
-                sh '''
-                    cd webhook-server
-                    sonar-scanner \
-                      -Dsonar.projectKey=webhook-server \
-                      -Dsonar.sources=src \
-                      -Dsonar.host.url=http://localhost:9000
-                '''
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                        cd webhook-server
+                        sonar-scanner \
+                          -Dsonar.projectKey=webhook-server \
+                          -Dsonar.sources=src \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.login=$SONAR_AUTH_TOKEN
+                    '''
+                }
             }
         }
         stage('Build') {
