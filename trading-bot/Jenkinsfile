@@ -6,7 +6,7 @@ pipeline {
         DOCKER_REPO = "asaikale"
         IMAGE_NAME = "trading-bot"
         IMAGE_TAG = "${BUILD_NUMBER}"
-        KUBECONFIG = ""/var/lib/jenkins/.kube/config""
+        KUBECONFIG = "/var/lib/jenkins/.kube/config"
     }
 
     stages {
