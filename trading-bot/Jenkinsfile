@@ -129,7 +129,7 @@ pipeline {
                             --record
                         
                         echo "⏳ Step 6: Waiting for deployment to be ready..."
-                        kubectl rollout status deployment/trading-bot --timeout=5m
+                        kubectl rollout status deployment/trading-bot --timeout=10m
                         
                         echo "✅ Trading Bot Deployment Complete!"
                         echo "========================================="
