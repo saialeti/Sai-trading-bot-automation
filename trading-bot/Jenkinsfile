@@ -1,6 +1,3 @@
-cd ~/Sai-trading-bot-automation
-
-cat > trading-bot/Jenkinsfile << 'EOF'
 pipeline {
     agent any
 
@@ -163,15 +160,3 @@ pipeline {
         }
     }
 }
-EOF
-
-# Verify it was updated
-cat trading-bot/Jenkinsfile | grep -A 5 "Install Dependencies"
-
-# Push to GitHub
-git add trading-bot/Jenkinsfile
-git commit -m "Fix: Add --break-system-packages for Python 3.12+ compatibility"
-git push origin main
-
-# Verify
-git log --oneline -3
