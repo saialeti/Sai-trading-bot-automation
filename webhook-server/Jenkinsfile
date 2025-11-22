@@ -29,11 +29,19 @@ pipeline {
         
         stage('SonarQube Analysis') {
             steps {
-                echo '🔍 Running SonarQube analysis...'
+                echo '🔍 Running SonarQube analysis with coverage...'
                 withSonarQubeEnv('sonarqube') {
                     sh '''
                         cd webhook-server
-                        sonar-scanner -Dsonar.projectKey=webhook-server -Dsonar.sources=src -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN
+                        npm install
+                        npm test
+                        sonar-scanner \
+                          -Dsonar.projectKey=webhook-server \
+                          -Dsonar.sources=src \
+                          -Dsonar.tests=tests \
+                          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.login=$SONAR_AUTH_TOKEN
                     '''
                 }
             }
