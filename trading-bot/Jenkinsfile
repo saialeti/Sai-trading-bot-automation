@@ -1,3 +1,6 @@
+cd ~/Sai-trading-bot-automation
+
+cat > trading-bot/Jenkinsfile << 'EOF'
 pipeline {
     agent any
 
@@ -22,9 +25,9 @@ pipeline {
                 echo '📦 Installing Python dependencies...'
                 sh '''
                     cd trading-bot
-                    python -m pip install --upgrade pip
-                    pip install -r requirements.txt
-                    pip install pytest pytest-cov
+                    python3 -m pip install --upgrade pip --break-system-packages
+                    pip3 install -r requirements.txt --break-system-packages
+                    pip3 install pytest pytest-cov --break-system-packages
                 '''
             }
         }
@@ -35,7 +38,7 @@ pipeline {
                 sh '''
                     cd trading-bot
                     if [ -d "tests" ]; then
-                        pytest tests/ -v --tb=short --cov=src || echo "Tests not fully configured yet"
+                        python3 -m pytest tests/ -v --tb=short --cov=src || echo "Tests not fully configured yet"
                     else
                         echo "⚠️  No tests directory found. Skipping tests."
                     fi
@@ -160,3 +163,15 @@ pipeline {
         }
     }
 }
+EOF
+
+# Verify it was updated
+cat trading-bot/Jenkinsfile | grep -A 5 "Install Dependencies"
+
+# Push to GitHub
+git add trading-bot/Jenkinsfile
+git commit -m "Fix: Add --break-system-packages for Python 3.12+ compatibility"
+git push origin main
+
+# Verify
+git log --oneline -3
