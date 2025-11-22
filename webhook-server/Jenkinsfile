@@ -26,6 +26,106 @@ pipeline {
                 '''
             }
         }
+        pipeline {
+    agent any
+    
+    environment {
+        SONAR_HOST_URL = 'http://localhost:9000'
+        DOCKER_REGISTRY = 'asaikale'
+        DOCKER_IMAGE = 'webhook-server'
+        DOCKER_TAG = 'latest'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '🔄 Checking out code from GitHub...'
+                checkout scm
+            }
+        }
+        
+        stage('Tests') {
+            steps {
+                echo '🧪 Running tests...'
+                sh '''
+                    cd webhook-server
+                    npm install
+                    npm test
+                '''
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            steps {
+                echo '🔍 Running SonarQube analysis...'
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                        cd webhook-server
+                        sonar-scanner \
+                          -Dsonar.projectKey=webhook-server \
+                          -Dsonar.sources=src \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.login=$SONAR_AUTH_TOKEN
+                    '''
+                }
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo '🐳 Building Docker image...'
+                sh '''
+                    cd webhook-server
+                    docker build -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} .
+                '''
+            }
+        }
+        
+        stage('Trivy Scan') {
+            steps {
+                echo '🔐 Scanning Docker image with Trivy...'
+                sh '''
+                    trivy image --severity HIGH,CRITICAL ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                '''
+            }
+        }
+        
+        stage('Push to Docker Hub') {
+            steps {
+                echo '📤 Pushing Docker image to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+                        docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker logout
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo '🚀 Deploying to Kubernetes...'
+                sh '''
+                    kubectl set image deployment/webhook-server webhook-server=${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                    kubectl rollout status deployment/webhook-server
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '✅ Pipeline execution completed'
+        }
+        success {
+            echo '🎉 Pipeline succeeded!'
+        }
+        failure {
+            echo '❌ Pipeline failed!'
+        }
+    }
+}
         
         stage('Build') {
             steps {
