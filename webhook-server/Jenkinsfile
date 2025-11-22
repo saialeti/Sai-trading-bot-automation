@@ -1,6 +1,5 @@
 pipeline {
     agent any
-    
     stages {
         stage('Checkout') {
             steps {
@@ -8,40 +7,37 @@ pipeline {
                 checkout scm
             }
         }
-        
         stage('Tests') {
             steps {
                 echo '🧪 Running tests...'
                 sh '''
+                    cd webhook-server
                     npm install
                     npm test
                 '''
             }
         }
-        
         stage('SonarQube Analysis') {
             steps {
                 echo '🔍 Running SonarQube analysis...'
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                        sonar-scanner \
-                          -Dsonar.projectKey=webhook-server \
-                          -Dsonar.sources=src \
-                          -Dsonar.host.url=http://localhost:9000
-                    '''
-                }
+                sh '''
+                    cd webhook-server
+                    sonar-scanner \
+                      -Dsonar.projectKey=webhook-server \
+                      -Dsonar.sources=src \
+                      -Dsonar.host.url=http://localhost:9000
+                '''
             }
         }
-        
         stage('Build') {
             steps {
                 echo '🐳 Building Docker image...'
                 sh '''
+                    cd webhook-server
                     docker build -t asaikale/webhook-server:latest .
                 '''
             }
         }
-        
         stage('Trivy Scan') {
             steps {
                 echo '🔐 Scanning Docker image with Trivy...'
@@ -50,7 +46,6 @@ pipeline {
                 '''
             }
         }
-        
         stage('Push to Docker Hub') {
             steps {
                 echo '📤 Pushing Docker image to Docker Hub...'
@@ -63,7 +58,6 @@ pipeline {
                 }
             }
         }
-        
         stage('Deploy to Kubernetes') {
             steps {
                 echo '🚀 Deploying to Kubernetes...'
