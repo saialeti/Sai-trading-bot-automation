@@ -74,13 +74,28 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 echo '🚀 Deploying to Kubernetes...'
-                sh '''
-                    cd webhook-server
-                    kubectl apply -f k8s/configmap.yaml
-                    kubectl apply -f k8s/deployment.yaml
-                    kubectl apply -f k8s/service.yaml
-                    kubectl rollout status deployment/webhook-server
-                '''
+                withCredentials([
+                    string(credentialsId: 'DISCORD_WEBHOOK_URL', variable: 'DISCORD_URL'),
+                    string(credentialsId: 'TRADING_BOT_URL', variable: 'BOT_URL')
+                ]) {
+                    sh '''
+                        cd webhook-server
+                        
+                        # Delete old secret if exists
+                        kubectl delete secret webhook-server-secrets --ignore-not-found
+                        
+                        # Create secret dynamically from Jenkins credentials
+                        kubectl create secret generic webhook-server-secrets \
+                          --from-literal=DISCORD_WEBHOOK_URL="${DISCORD_URL}" \
+                          --from-literal=TRADING_BOT_URL="${BOT_URL}"
+                        
+                        # Apply other manifests
+                        kubectl apply -f k8s/configmap.yaml
+                        kubectl apply -f k8s/deployment.yaml
+                        kubectl apply -f k8s/service.yaml
+                        kubectl rollout status deployment/webhook-server
+                    '''
+                }
             }
         }
     }
